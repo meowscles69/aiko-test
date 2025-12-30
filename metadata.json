@@ -1,0 +1,7 @@
+{
+  "name": "AikoOS - Cute Companion AI Operating System",
+  "description": "An anime-inspired AI operating system featuring a playful personality and real-time voice output.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
