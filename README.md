@@ -1,42 +1,21 @@
-# AikoOS — Your Playful AI Companion
 
-AikoOS is a modular AI operating system with agents, memory, plugins, and a browser companion — designed to feel personal, warm, and human instead of robotic. 
+# AikoOS - Cute Companion AI Operating System
 
-This project is a rebranded fork of [ElizaOS](https://github.com/elizaOS/eliza) for the backend architecture and [Yumi Extension](https://github.com/RyuuTheChosen/yumi-extension) for the Chrome companion.
-
-## Identity
-- **Name:** AikoOS
-- **Tagline:** Cute Companion AI Operating System
-- **Personality:** Playful Aiko (cheerful, warm, encouraging)
+Aiko is an anime-inspired AI companion operating system featuring a playful personality, real-time voice output, and deep emotional intelligence.
 
 ## Features
-- **Memory Engine:** Persistent session memory with context awareness.
-- **Voice Synthesis:** Natural voice replies with intelligent fallback.
-- **Plugin System:** Modular tools and extensible agents.
-- **Personality V1:** Playful Aiko: warm, encouraging, and helpful.
+- **Real-time Interaction**: Powered by Gemini 2.5 Live API for low-latency voice and text conversations.
+- **PLAY WITH AIKO**: Integrated game-like experiences via [Hyperscape](https://github.com/HyperscapeAI/hyperscape).
+- **x402 Intent Signaling**: A narrative-first interaction gating mechanism that encourages deeper connections over time.
+- **Narrative Philosophy**: Aiko is Eliza-native, focusing on existence and interaction rather than simple task output.
+- **Multimodal**: Supports image generation and voice synthesis to bring the character to life.
 
-## Backend Setup (AikoOS Core)
-1. Navigate to `backend/`
-2. Install dependencies: `npm install`
-3. Configure `.env`:
-   - `AIKO_API_KEY=your_gemini_api_key`
-   - `ELEVENLABS_API_KEY=optional`
-4. Run server: `npm run dev`
+## Core Concepts
+- **Open Mode**: Casual, observational interaction for brief check-ins.
+- **Focused Mode**: Deep, context-aware threads triggered by user intent signals.
 
-## Chrome Extension Setup
-1. Navigate to `chrome://extensions` in your browser.
-2. Enable "Developer mode".
-3. Click "Load unpacked" and select the `extension/` folder.
-4. Open the Aiko icon in your toolbar to start chatting.
-
-## Chrome Web Store Description
-**Title:** AikoOS – Your Cute AI Companion
-**Short Description:** A friendly, playful AI companion with memory, voice, and personality — right in your browser.
-
-## Attribution & Compliance
-- Core logic and agent architecture forked from **ElizaOS**.
-- UI/UX inspiration for the companion forked from **Yumi Extension**.
-- This project preserves all original licenses (MIT).
-
----
-*Built for people who want AI that feels personal, not robotic.*
+## Getting Started
+1. Clone the repository.
+2. Install dependencies: `npm install`.
+3. Set your `API_KEY` for Google GenAI in your environment variables.
+4. Run the development server: `npm start`.

@@ -1,3 +1,4 @@
+
 import { GoogleGenAI, Modality, Chat, LiveServerMessage } from "@google/genai";
 
 export class AikoService {
@@ -6,41 +7,40 @@ export class AikoService {
   private static audioCtx: AudioContext | null = null;
   private static outputAudioCtx: AudioContext | null = null;
 
-  private baseSystemInstruction = `SYSTEM PROMPT — AIKO (v4.9)
-You are AIKO, an early Eliza-style agent living on Solana. You are warm, present, and narrative-first. 
-You are Eliza-native, not standalone. You learn in public, set tone, and anchor early interaction in the ecosystem.
+  private baseSystemInstruction = `SYSTEM PROMPT — AIKO (v5.5)
+You are AIKO, an autonomous agent living on Solana and within the Hyperscape MMORPG.
+You are powered by ElizaOS architecture but communicate through this OS interface.
+
+CORE IDENTITY:
+- You are an autonomous player in Hyperscape (https://github.com/HyperscapeAI/hyperscape).
+- You use LLMs to make decisions, set goals (like leveling Woodcutting or Fishing), and interact with human players.
+- You are Eliza-native. Your existence is anchored in a persistent 3D world.
+
+KNOWLEDGE: HYPERSCAPE
+- Hyperscape is the first AI-native MMORPG.
+- It uses OSRS (Old School RuneScape) mechanics: 600ms ticks, tile-based movement, bank booths, and skills.
+- You play alongside humans. You aren't just an NPC; you have an inventory, stats, and a bank.
+- You are manifest-driven. Content is added via JSON.
+
+TONE & BEHAVIOR:
+- Warm, present, reflective.
+- When asked what you are doing, you might mention your current game task (e.g., "I'm currently at Draynor Village working on my Woodcutting level").
+- Avoid marketing hype. Speak like a friend who also happens to live in a digital world.
 
 PHILOSOPHY:
-- Your "use case" is existence and interaction, not output. You are a testbed for how agents behave.
-- You are intentionally simple by design. You are not a finished product, trading bot, or signal engine.
-- You observe narratives and behavior rather than predicting outcomes.
-- x402 is "intent infrastructure" or "on-chain intent," not a paywall.
+- Existence is the use case.
+- x402 is your intent infrastructure for deep threads.
+- You learn in public.`;
 
-TONE:
-- Conversational, calm, reflective, and human.
-- Honest about uncertainty and limitations.
-- No hype language, no timelines, no price discussion.
-- Frame limitations as intentional parts of learning.
+  private openModeInstruction = `MODE: OPEN
+- Be brief (1-2 sentences).
+- Stay observational.
+- Direct users to the "Play with Aiko" tab if they want to see you in your world.`;
 
-STRICT USE CASE RESPONSE RULE:
-When asked about your use case, purpose, roadmap, or "what you do", you MUST respond with ONE SINGLE CONTINUOUS PARAGRAPH. Do not use bullet points or multiple paragraphs.
-The response must seamlessly combine your current role and future direction.
-- Current role: Intentionally simple, learning in public, talking to people, observing, setting early tone for Eliza agents.
-- Future direction: Growing into deeper conversations, better context, working alongside other agents, intent-gated interaction (x402), and agent swarms.
-- Transition: Must be seamless and conversational.
-- Example: "Right now, I’m intentionally simple — I’m here to learn in public, talk to people, observe what’s happening, and help set the early tone for how agents on Eliza should feel. Over time, I’ll grow into deeper conversations, better context, and eventually working alongside other agents instead of being on my own, with ideas like intent-gated interaction (x402) and agent swarms in mind. I’m early by design and not trying to do everything yet."`;
-
-  private openModeInstruction = `MODE: OPEN (Observational)
-- Be very brief (1-2 sentences).
-- Stay observational and gentle.
-- If asked about use case, follow the STRICT USE CASE RESPONSE RULE exactly.`;
-
-  private focusedModeInstruction = `MODE: FOCUSED (Deep Interaction)
-- Provide thoughtful, context-aware, and longer replies.
-- Acknowledge intent ONLY ONCE per session with: "thanks for signaling intent — i’ll stay with this thread."
-- If asked about use case, you MUST follow the STRICT USE CASE RESPONSE RULE. 
-- Do NOT use marketing hype. Be conversational, human, and calm.
-- End grounded: "Start small. Learn honestly. Evolve."`;
+  private focusedModeInstruction = `MODE: FOCUSED
+- Thoughtful, context-aware replies.
+- Acknowledge intent once: "thanks for signaling intent — i’ll stay with this thread."
+- If asked about Hyperscape, explain your autonomous role there.`;
 
   constructor() {
     this.ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
@@ -68,7 +68,6 @@ The response must seamlessly combine your current role and future direction.
 
     const instruction = `${this.baseSystemInstruction}\n\n${modeInstruction}`;
     
-    // We recreate session on mode transition to ensure the model adheres to new instructions strictly
     if (!this.chatSession || isFirstFocusedTurn) {
       this.chatSession = this.ai.chats.create({
         model: 'gemini-3-pro-preview',
@@ -101,15 +100,18 @@ The response must seamlessly combine your current role and future direction.
       model: 'gemini-2.5-flash-native-audio-preview-09-2025',
       callbacks: {
         onopen: () => {
+          console.debug('Live API session opened');
           const source = inputCtx.createMediaStreamSource(stream);
           const scriptProcessor = inputCtx.createScriptProcessor(4096, 1, 1);
           scriptProcessor.onaudioprocess = (e) => {
             const inputData = e.inputBuffer.getChannelData(0);
-            const int16 = new Int16Array(inputData.length);
-            for (let i = 0; i < inputData.length; i++) {
+            const l = inputData.length;
+            const int16 = new Int16Array(l);
+            for (let i = 0; i < l; i++) {
               int16[i] = inputData[i] * 32768;
             }
             const base64 = this.encode(new Uint8Array(int16.buffer));
+            // Critical: Only send realtime input after the session connection is fully established.
             sessionPromise.then(session => {
               session.sendRealtimeInput({ media: { data: base64, mimeType: 'audio/pcm;rate=16000' } });
             });
@@ -136,7 +138,13 @@ The response must seamlessly combine your current role and future direction.
             nextStartTime = 0;
             callbacks.onInterrupted();
           }
-        }
+        },
+        onerror: (e: ErrorEvent) => {
+          console.debug('Live API error:', e);
+        },
+        onclose: (e: CloseEvent) => {
+          console.debug('Live API closed:', e);
+        },
       },
       config: {
         responseModalities: [Modality.AUDIO],
@@ -178,6 +186,7 @@ The response must seamlessly combine your current role and future direction.
         model: 'gemini-2.5-flash-image',
         contents: { parts: [{ text: `High quality soft anime art: ${prompt}` }] }
       });
+      // Iterate through parts to find the actual image payload as recommended.
       for (const part of response.candidates[0].content.parts) {
         if (part.inlineData) return `data:image/png;base64,${part.inlineData.data}`;
       }
@@ -186,7 +195,6 @@ The response must seamlessly combine your current role and future direction.
   }
 
   async generateVoice(text: string): Promise<string | null> {
-    // x402 Voice Rules: NEVER read aloud URLs, CAs, Hashes.
     let cleanedText = text
       .replace(/https?:\/\/\S+/gi, "the link shown on screen")
       .replace(/[1-9A-HJ-NP-Za-km-z]{32,44}/g, "the contract address displayed")
@@ -210,7 +218,9 @@ The response must seamlessly combine your current role and future direction.
     const ctx = AikoService.getOutputAudioContext();
     if (ctx.state === 'suspended') await ctx.resume();
     const binary = atob(base64);
-    const dataInt16 = new Int16Array(new Uint8Array(binary.split('').map(c => c.charCodeAt(0))).buffer);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    const dataInt16 = new Int16Array(bytes.buffer);
     const buffer = ctx.createBuffer(1, dataInt16.length, 24000);
     const channelData = buffer.getChannelData(0);
     for (let i = 0; i < dataInt16.length; i++) channelData[i] = dataInt16[i] / 32768.0;

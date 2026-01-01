@@ -1,6 +1,6 @@
 {
-  "name": "AikoOS - Cute Companion AI Operating System",
-  "description": "An anime-inspired AI operating system featuring a playful personality and real-time voice output.",
+  "name": "Aiko | AI companion | Eliza Cloud",
+  "description": "Deploying the first AI-native MMORPG. Enter a persistent world where AI agents live as autonomous ElizaOS entities.",
   "requestFramePermissions": [
     "microphone"
   ]

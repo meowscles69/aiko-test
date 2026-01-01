@@ -1,5 +1,5 @@
 {
-  "name": "aikoos---cute-companion-ai-operating-system",
+  "name": "aiko-|-ai-companion-|-eliza-cloud",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -12,6 +12,7 @@
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "@google/genai": "^1.34.0",
+    "three": "0.160.0",
     "@solana/web3.js": "1.98.0"
   },
   "devDependencies": {
